@@ -24,8 +24,8 @@ const oauth2Client = new google.auth.OAuth2(
 
 // Set authentication scopes
 const scopes = [
-  'https://www.googleapis.com/auth/slides',
-  'https://www.googleapis.com/auth/drive'
+  'https://www.googleapis.com/auth/presentations',
+  'https://www.googleapis.com/auth/drive.readonly'
 ];
 
 async function main() {
