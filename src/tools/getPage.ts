@@ -1,22 +1,13 @@
 import { GetPageArgsSchema, type GetPageArgs } from '../schemas.js';
-import { handleGoogleApiError } from '../utils/errorHandler.js';
-import type { ToolModule, ToolResult } from '../utils/toolExecutor.js';
+import type { ToolModule } from '../utils/tool.js';
 import type { slides_v1 } from 'googleapis';
 
-const JSON_INDENT = 2;
-
-const handler = async (slides: slides_v1.Slides, args: GetPageArgs): Promise<ToolResult> => {
-  try {
-    const response = await slides.presentations.pages.get({
-      presentationId: args.presentationId,
-      pageObjectId: args.pageObjectId,
-    });
-    return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, JSON_INDENT) }],
-    };
-  } catch (error: unknown) {
-    throw handleGoogleApiError(error, 'get_page');
-  }
+const handler = async (slides: slides_v1.Slides, args: GetPageArgs): Promise<unknown> => {
+  const response = await slides.presentations.pages.get({
+    presentationId: args.presentationId,
+    pageObjectId: args.pageObjectId,
+  });
+  return response.data;
 };
 
 export const getPage: ToolModule<GetPageArgs> = {

@@ -50,3 +50,8 @@ export const mergeCredential = (stored: PartialGoogleCredential | undefined): Pa
     refreshToken: env.refreshToken ?? stored?.refreshToken,
   };
 };
+
+export const sameCredential = (left: GoogleCredential, right: GoogleCredential): boolean =>
+  left.clientId === right.clientId &&
+  left.clientSecret === right.clientSecret &&
+  left.refreshToken === right.refreshToken;

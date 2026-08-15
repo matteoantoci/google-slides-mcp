@@ -1,3 +1,3 @@
 # Tool modules export name, descriptor, and handler
 
-Each file under `src/tools/` exports the tool name, the ListTools descriptor, and the handler. `executeTool` takes one options object. `serverHandlers` only registers the list. We do this so the 50-line function cap and the 3-parameter cap both pass without local rule overrides.
+Each file under `src/tools/` exports the tool name, the ListTools descriptor, the Zod schema, and a handler. The handler returns the payload. `serverHandlers` wraps JSON text and Google API errors at register time. We do this so tool files stay on the Google call.

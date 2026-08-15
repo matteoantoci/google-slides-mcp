@@ -3,9 +3,24 @@ import { createPresentation } from './tools/createPresentation.js';
 import { getPage } from './tools/getPage.js';
 import { getPresentation } from './tools/getPresentation.js';
 import { summarizePresentation } from './tools/summarizePresentation.js';
-import type { ToolModule } from './utils/toolExecutor.js';
+import { handleGoogleApiError } from './utils/errorHandler.js';
+import type { ToolModule } from './utils/tool.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { slides_v1 } from 'googleapis';
+
+const JSON_INDENT = 2;
+
+const jsonText = (data: unknown): { content: { type: 'text'; text: string }[] } => ({
+  content: [{ type: 'text', text: JSON.stringify(data, null, JSON_INDENT) }],
+});
+
+const invoke = async <T>(slides: slides_v1.Slides, tool: ToolModule<T>, args: T) => {
+  try {
+    return jsonText(await tool.handler(slides, args));
+  } catch (error: unknown) {
+    throw handleGoogleApiError(error, tool.name);
+  }
+};
 
 const register = <T>(server: McpServer, slides: slides_v1.Slides, tool: ToolModule<T>): void => {
   server.registerTool(
@@ -14,7 +29,7 @@ const register = <T>(server: McpServer, slides: slides_v1.Slides, tool: ToolModu
       description: tool.descriptor.description,
       inputSchema: tool.schema,
     },
-    async (args) => tool.handler(slides, args)
+    async (args) => invoke(slides, tool, args)
   );
 };
 

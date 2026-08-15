@@ -1,9 +1,7 @@
 import { SummarizePresentationArgsSchema, type SummarizePresentationArgs } from '../schemas.js';
-import { handleGoogleApiError } from '../utils/errorHandler.js';
-import type { ToolModule, ToolResult } from '../utils/toolExecutor.js';
+import type { ToolModule } from '../utils/tool.js';
 import type { slides_v1 } from 'googleapis';
 
-const JSON_INDENT = 2;
 const SLIDE_FIELDS =
   'presentationId,title,revisionId,slides(objectId,pageElements(shape(text(textElements(textRun(content)))),table(tableRows(tableCells(text(textElements(textRun(content))))))),slideProperties(notesPage(pageElements(shape(text(textElements(textRun(content))))))))';
 
@@ -24,21 +22,10 @@ const extractText = (elements: slides_v1.Schema$PageElement[] | undefined): stri
   return elements.flatMap((element) => [...textFromShape(element), ...textFromTable(element)]);
 };
 
-const emptySummary = (title: string | null | undefined): ToolResult => ({
-  content: [
-    {
-      type: 'text',
-      text: JSON.stringify(
-        {
-          title: title ?? 'Untitled Presentation',
-          slideCount: 0,
-          summary: 'This presentation contains no slides.',
-        },
-        null,
-        JSON_INDENT
-      ),
-    },
-  ],
+const emptySummary = (title: string | null | undefined) => ({
+  title: title ?? 'Untitled Presentation',
+  slideCount: 0,
+  summary: 'This presentation contains no slides.',
 });
 
 const slideContent = (slide: slides_v1.Schema$Page, index: number, includeNotes: boolean) => {
@@ -52,42 +39,27 @@ const slideContent = (slide: slides_v1.Schema$Page, index: number, includeNotes:
   };
 };
 
-const buildSummary = (presentation: slides_v1.Schema$Presentation, includeNotes: boolean): ToolResult => {
+const buildSummary = (presentation: slides_v1.Schema$Presentation, includeNotes: boolean) => {
   if (!presentation.slides?.length) {
     return emptySummary(presentation.title);
   }
   const slidesContent = presentation.slides.map((slide, index) => slideContent(slide, index, includeNotes));
   return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(
-          {
-            title: presentation.title ?? 'Untitled Presentation',
-            slideCount: slidesContent.length,
-            lastModified: presentation.revisionId ? `Revision ${presentation.revisionId}` : 'Unknown',
-            slides: slidesContent,
-          },
-          null,
-          JSON_INDENT
-        ),
-      },
-    ],
+    title: presentation.title ?? 'Untitled Presentation',
+    slideCount: slidesContent.length,
+    lastModified: presentation.revisionId ? `Revision ${presentation.revisionId}` : 'Unknown',
+    slides: slidesContent,
   };
 };
 
-const handler = async (slides: slides_v1.Slides, args: SummarizePresentationArgs): Promise<ToolResult> => {
-  try {
-    const presentation = (
-      await slides.presentations.get({
-        presentationId: args.presentationId,
-        fields: SLIDE_FIELDS,
-      })
-    ).data;
-    return buildSummary(presentation, args.include_notes === true);
-  } catch (error: unknown) {
-    throw handleGoogleApiError(error, 'summarize_presentation');
-  }
+const handler = async (slides: slides_v1.Slides, args: SummarizePresentationArgs): Promise<unknown> => {
+  const presentation = (
+    await slides.presentations.get({
+      presentationId: args.presentationId,
+      fields: SLIDE_FIELDS,
+    })
+  ).data;
+  return buildSummary(presentation, args.include_notes === true);
 };
 
 export const summarizePresentation: ToolModule<SummarizePresentationArgs> = {
