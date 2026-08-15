@@ -24,21 +24,6 @@ export const getPresentation: ToolModule<GetPresentationArgs> = {
   schema: GetPresentationArgsSchema,
   handler,
   descriptor: {
-    name: 'get_presentation',
     description: 'Get details about a Google Slides presentation',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        presentationId: {
-          type: 'string',
-          description: 'The ID of the presentation to retrieve.',
-        },
-        fields: {
-          type: 'string',
-          description: 'Optional. A mask specifying which fields to include in the response (e.g., "slides,pageSize").',
-        },
-      },
-      required: ['presentationId'],
-    },
   },
 };

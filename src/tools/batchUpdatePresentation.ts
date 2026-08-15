@@ -41,31 +41,6 @@ export const batchUpdatePresentation: ToolModule<BatchUpdatePresentationArgs> = 
   schema: BatchUpdatePresentationArgsSchema,
   handler,
   descriptor: {
-    name: 'batch_update_presentation',
     description: 'Apply a batch of updates to a Google Slides presentation',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        presentationId: {
-          type: 'string',
-          description: 'The ID of the presentation to update.',
-        },
-        requests: {
-          type: 'array',
-          description:
-            'A list of update requests to apply. See Google Slides API documentation for request structures.',
-          items: { type: 'object' },
-        },
-        writeControl: {
-          type: 'object',
-          description: 'Optional. Provides control over how write requests are executed.',
-          properties: {
-            requiredRevisionId: { type: 'string' },
-            targetRevisionId: { type: 'string' },
-          },
-        },
-      },
-      required: ['presentationId', 'requests'],
-    },
   },
 };

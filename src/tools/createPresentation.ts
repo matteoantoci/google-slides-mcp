@@ -25,17 +25,6 @@ export const createPresentation: ToolModule<CreatePresentationArgs> = {
   schema: CreatePresentationArgsSchema,
   handler,
   descriptor: {
-    name: 'create_presentation',
     description: 'Create a new Google Slides presentation',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        title: {
-          type: 'string',
-          description: 'The title of the presentation.',
-        },
-      },
-      required: ['title'],
-    },
   },
 };

@@ -95,21 +95,6 @@ export const summarizePresentation: ToolModule<SummarizePresentationArgs> = {
   schema: SummarizePresentationArgsSchema,
   handler,
   descriptor: {
-    name: 'summarize_presentation',
     description: 'Extract text content from all slides in a presentation for summarization purposes',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        presentationId: {
-          type: 'string',
-          description: 'The ID of the presentation to summarize.',
-        },
-        include_notes: {
-          type: 'boolean',
-          description: 'Optional. Whether to include speaker notes in the summary (default: false).',
-        },
-      },
-      required: ['presentationId'],
-    },
   },
 };

@@ -24,21 +24,6 @@ export const getPage: ToolModule<GetPageArgs> = {
   schema: GetPageArgsSchema,
   handler,
   descriptor: {
-    name: 'get_page',
     description: 'Get details about a specific page (slide) in a presentation',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        presentationId: {
-          type: 'string',
-          description: 'The ID of the presentation.',
-        },
-        pageObjectId: {
-          type: 'string',
-          description: 'The object ID of the page (slide) to retrieve.',
-        },
-      },
-      required: ['presentationId', 'pageObjectId'],
-    },
   },
 };
