@@ -19,20 +19,18 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.9.0",
-    "googleapis": "^148.0.0",
-    "open": "^10.1.1",
-    "server-destroy": "^1.0.1",
-    "zod": "^3.24.3"
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "googleapis": "^174.0.1",
+    "open": "^11.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
-    "@types/server-destroy": "^1.0.4",
+    "@types/node": "^26.2.0",
     "oxc-config-ai-guardrails": "^0.1.0",
-    "oxfmt": "^0.61.0",
-    "oxlint": "^1.76.0",
-    "oxlint-tsgolint": "^7.0.0",
-    "simple-git-hooks": "^2.13.0",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "simple-git-hooks": "^2.13.1",
     "typescript": "^7.0.2"
   },
   "simple-git-hooks": {

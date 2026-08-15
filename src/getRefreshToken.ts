@@ -3,7 +3,6 @@ import { google } from 'googleapis';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { parse } from 'node:url';
 import open from 'open';
-import destroyer from 'server-destroy';
 
 const PORT = 3000;
 const HTTP_OK = 200;
@@ -86,7 +85,10 @@ const errorText = (error: unknown): string => (error instanceof Error ? error.me
 
 const startServer = (): void => {
   const server = createServer((req, res) => {
-    handleCallback(req, res, () => server.destroy()).catch((error: unknown) => {
+    handleCallback(req, res, () => {
+      server.closeAllConnections();
+      server.close();
+    }).catch((error: unknown) => {
       send({
         res,
         status: HTTP_SERVER_ERROR,
@@ -102,7 +104,6 @@ const startServer = (): void => {
       console.error('Error:', error);
     });
   });
-  destroyer(server);
 };
 
 startServer();

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { google } from 'googleapis';
 import { setupToolHandlers } from './serverHandlers.js';
@@ -13,7 +13,7 @@ const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
 checkEnvironmentVariables();
 
 const shutdown =
-  (server: Server): (() => void) =>
+  (server: McpServer): (() => void) =>
   () => {
     server
       .close()
@@ -22,7 +22,7 @@ const shutdown =
   };
 
 const initializeAndRunServer = async (): Promise<void> => {
-  const server = new Server(
+  const server = new McpServer(
     {
       name: 'google-slides-mcp',
       version: '0.1.0',
@@ -42,7 +42,7 @@ const initializeAndRunServer = async (): Promise<void> => {
     auth: oauth2Client,
   });
   setupToolHandlers(server, slides);
-  Reflect.set(server, 'onerror', (error: Error) => console.error('[MCP Server Error]', error));
+  Reflect.set(server.server, 'onerror', (error: Error) => console.error('[MCP Server Error]', error));
   process.on('SIGINT', shutdown(server));
   process.on('SIGTERM', shutdown(server));
   await server.connect(new StdioServerTransport());

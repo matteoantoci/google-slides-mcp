@@ -4,7 +4,7 @@ This project provides a Model Context Protocol (MCP) server for interacting with
 
 ## Prerequisites
 
-- Node.js (v18 or later recommended)
+- Node.js (v20 or later recommended)
 - npm (usually comes with Node.js)
 - Google Cloud Project with the Google Slides API enabled.
 - OAuth 2.0 Credentials (Client ID and Client Secret) for your Google Cloud Project.
