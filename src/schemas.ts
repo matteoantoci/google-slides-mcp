@@ -11,15 +11,10 @@ export const GetPresentationArgsSchema = z.object({
 });
 export type GetPresentationArgs = z.infer<typeof GetPresentationArgsSchema>;
 
-// Using z.any() for complex Google Slides API structures for simplicity in this context.
-// For stricter typing, these could be defined more precisely based on the Google Slides API.
-const GoogleSlidesRequestSchema = z.any();
-const GoogleSlidesWriteControlSchema = z.any();
-
 export const BatchUpdatePresentationArgsSchema = z.object({
   presentationId: z.string().min(1, { message: '"presentationId" (string) is required.' }),
-  requests: z.array(GoogleSlidesRequestSchema).min(1, { message: '"requests" (array) is required.' }),
-  writeControl: GoogleSlidesWriteControlSchema.optional(),
+  requests: z.array(z.unknown()).min(1, { message: '"requests" (array) is required.' }),
+  writeControl: z.unknown().optional(),
 });
 export type BatchUpdatePresentationArgs = z.infer<typeof BatchUpdatePresentationArgsSchema>;
 

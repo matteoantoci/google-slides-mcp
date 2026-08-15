@@ -1,9 +1,8 @@
 export const checkEnvironmentVariables = (): void => {
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
-
-  if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  if (!clientId || !clientSecret || !refreshToken) {
     console.error(
       'Error: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN environment variables are required.'
     );

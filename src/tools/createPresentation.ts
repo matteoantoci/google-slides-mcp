@@ -1,15 +1,11 @@
-import { slides_v1 } from 'googleapis';
-import { CreatePresentationArgs } from '../schemas.js';
+import { CreatePresentationArgsSchema, type CreatePresentationArgs } from '../schemas.js';
 import { handleGoogleApiError } from '../utils/errorHandler.js';
+import type { ToolModule, ToolResult } from '../utils/toolExecutor.js';
+import type { slides_v1 } from 'googleapis';
 
-/**
- * Creates a new Google Slides presentation.
- * @param slides The authenticated Google Slides API client.
- * @param args The arguments for creating the presentation.
- * @returns A promise resolving to the MCP response.
- * @throws McpError if the Google API call fails.
- */
-export const createPresentationTool = async (slides: slides_v1.Slides, args: CreatePresentationArgs) => {
+const JSON_INDENT = 2;
+
+const handler = async (slides: slides_v1.Slides, args: CreatePresentationArgs): Promise<ToolResult> => {
   try {
     const response = await slides.presentations.create({
       requestBody: {
@@ -17,9 +13,29 @@ export const createPresentationTool = async (slides: slides_v1.Slides, args: Cre
       },
     });
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: 'text', text: JSON.stringify(response.data, null, JSON_INDENT) }],
     };
   } catch (error: unknown) {
     throw handleGoogleApiError(error, 'create_presentation');
   }
+};
+
+export const createPresentation: ToolModule<CreatePresentationArgs> = {
+  name: 'create_presentation',
+  schema: CreatePresentationArgsSchema,
+  handler,
+  descriptor: {
+    name: 'create_presentation',
+    description: 'Create a new Google Slides presentation',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'The title of the presentation.',
+        },
+      },
+      required: ['title'],
+    },
+  },
 };

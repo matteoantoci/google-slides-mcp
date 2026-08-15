@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": [
+    "./node_modules/oxc-config-ai-guardrails/configs/base.json",
+    "./node_modules/oxc-config-ai-guardrails/configs/typescript.json"
+  ],
+  "ignorePatterns": ["build/**", "node_modules/**"]
+}

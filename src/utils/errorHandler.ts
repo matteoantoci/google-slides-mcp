@@ -1,40 +1,37 @@
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 
-/**
- * Handles errors from Google API calls and converts them into McpError instances.
- * @param error The error object caught from the API call.
- * @param toolName The name of the tool where the error occurred.
- * @returns An McpError instance.
- */
-
-const extractRawErrorMessage = (err: unknown): string => {
-  if (typeof err === 'object' && err !== null && 'response' in err) {
-    const gError = err as { response?: { data?: { error?: { message?: string } } } };
-    return gError.response?.data?.error?.message || (err instanceof Error ? err.message : String(err));
+const readMessage = (value: unknown): string | undefined => {
+  if (typeof value !== 'object' || value === null || !('message' in value)) {
+    return undefined;
   }
-  if (err instanceof Error) {
-    return err.message;
+  if (typeof value.message !== 'string') {
+    return undefined;
   }
-  if (typeof err === 'string') {
-    return err;
-  }
-  return 'Unknown Google API error';
+  return value.message;
 };
 
-export const handleGoogleApiError = (error: unknown, toolName: string): McpError => {
-  const rawErrorMessage = extractRawErrorMessage(error);
-  const finalErrorMessage = `Google API Error in ${toolName}: ${rawErrorMessage}`;
+const readNested = (value: unknown, key: string): unknown => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  return Reflect.get(value, key);
+};
 
+const googleApiMessage = (err: unknown): string | undefined => {
+  const response = readNested(err, 'response');
+  const data = readNested(response, 'data');
+  const error = readNested(data, 'error');
+  return readMessage(error);
+};
+
+const extractRawErrorMessage = (err: unknown): string =>
+  googleApiMessage(err) ?? readMessage(err) ?? (typeof err === 'string' ? err : 'Unknown Google API error');
+
+export const handleGoogleApiError = (error: unknown, toolName: string): McpError => {
+  const finalErrorMessage = `Google API Error in ${toolName}: ${extractRawErrorMessage(error)}`;
   console.error(`Google API Error (${toolName}):`, error);
   return new McpError(ErrorCode.InternalError, finalErrorMessage);
 };
 
-export const getStartupErrorMessage = (err: unknown): string => {
-  if (err instanceof Error) {
-    return err.message;
-  }
-  if (typeof err === 'string') {
-    return err;
-  }
-  return 'Unknown error';
-};
+export const getStartupErrorMessage = (err: unknown): string =>
+  readMessage(err) ?? (typeof err === 'string' ? err : 'Unknown error');

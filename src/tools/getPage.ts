@@ -1,24 +1,44 @@
-import { slides_v1 } from 'googleapis';
-import { GetPageArgs } from '../schemas.js';
+import { GetPageArgsSchema, type GetPageArgs } from '../schemas.js';
 import { handleGoogleApiError } from '../utils/errorHandler.js';
+import type { ToolModule, ToolResult } from '../utils/toolExecutor.js';
+import type { slides_v1 } from 'googleapis';
 
-/**
- * Gets details about a specific page (slide) in a presentation.
- * @param slides The authenticated Google Slides API client.
- * @param args The arguments for getting the page.
- * @returns A promise resolving to the MCP response content.
- * @throws McpError if the Google API call fails.
- */
-export const getPageTool = async (slides: slides_v1.Slides, args: GetPageArgs) => {
+const JSON_INDENT = 2;
+
+const handler = async (slides: slides_v1.Slides, args: GetPageArgs): Promise<ToolResult> => {
   try {
     const response = await slides.presentations.pages.get({
       presentationId: args.presentationId,
       pageObjectId: args.pageObjectId,
     });
     return {
-      content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
+      content: [{ type: 'text', text: JSON.stringify(response.data, null, JSON_INDENT) }],
     };
   } catch (error: unknown) {
     throw handleGoogleApiError(error, 'get_page');
   }
+};
+
+export const getPage: ToolModule<GetPageArgs> = {
+  name: 'get_page',
+  schema: GetPageArgsSchema,
+  handler,
+  descriptor: {
+    name: 'get_page',
+    description: 'Get details about a specific page (slide) in a presentation',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        presentationId: {
+          type: 'string',
+          description: 'The ID of the presentation.',
+        },
+        pageObjectId: {
+          type: 'string',
+          description: 'The object ID of the page (slide) to retrieve.',
+        },
+      },
+      required: ['presentationId', 'pageObjectId'],
+    },
+  },
 };

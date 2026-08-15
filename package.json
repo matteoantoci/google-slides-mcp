@@ -2,17 +2,22 @@
   "name": "google-slides-mcp",
   "version": "0.1.0",
   "description": "MCP server for Google Slides integration",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "type": "module",
   "main": "build/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
-    "lint": "eslint . --ext .ts",
-    "get-token": "npm run build && node build/getRefreshToken.js"
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint --type-aware",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run fmt:check && npm run lint && npm run typecheck",
+    "get-token": "npm run build && node build/getRefreshToken.js",
+    "prepare": "simple-git-hooks"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
     "googleapis": "^148.0.0",
@@ -21,14 +26,16 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
     "@types/node": "^22.14.1",
     "@types/server-destroy": "^1.0.4",
-    "eslint": "^9.8.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-prettier": "^5.2.1",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.0.0-alpha.59"
+    "oxc-config-ai-guardrails": "^0.1.0",
+    "oxfmt": "^0.61.0",
+    "oxlint": "^1.76.0",
+    "oxlint-tsgolint": "^7.0.0",
+    "simple-git-hooks": "^2.13.0",
+    "typescript": "^7.0.2"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run check"
   }
 }

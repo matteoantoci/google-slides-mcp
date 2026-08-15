@@ -1,119 +1,108 @@
 #!/usr/bin/env node
 import { google } from 'googleapis';
-import * as http from 'http';
-import * as url from 'url';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { parse } from 'node:url';
 import open from 'open';
 import destroyer from 'server-destroy';
 
-// Before running this script, please set the following environment variables
+const PORT = 3000;
+const HTTP_OK = 200;
+const HTTP_BAD_REQUEST = 400;
+const HTTP_SERVER_ERROR = 500;
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error('Please set the GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables');
-  process.exit(1);
-}
+const scopes = ['https://www.googleapis.com/auth/presentations', 'https://www.googleapis.com/auth/drive.readonly'];
 
-// Initialize OAuth2 client
-const oauth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
+type HtmlResponse = {
+  res: ServerResponse;
+  status: number;
+  title: string;
+  body: string;
+};
 
-// Set authentication scopes
-const scopes = [
-  'https://www.googleapis.com/auth/presentations',
-  'https://www.googleapis.com/auth/drive.readonly'
-];
+const htmlPage = (title: string, body: string): string => `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+</head>
+<body>
+  ${body}
+</body>
+</html>`;
 
-async function main() {
-  // Generate authentication URL
-  const authorizeUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent' // Required to force refresh token acquisition
+const send = ({ res, status, title, body }: HtmlResponse): void => {
+  res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(htmlPage(title, body));
+};
+
+const requireEnv = (value: string | undefined): string => {
+  if (!value) {
+    console.error('Please set the GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables');
+    process.exit(1);
+  }
+  return value;
+};
+
+const clientId = requireEnv(CLIENT_ID);
+const clientSecret = requireEnv(CLIENT_SECRET);
+const redirectUri = `http://localhost:${PORT}/oauth2callback`;
+const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+const authorizeUrl = oauth2Client.generateAuthUrl({
+  access_type: 'offline',
+  scope: scopes,
+  prompt: 'consent',
+});
+
+const exchangeCode = async (code: string, res: ServerResponse, close: () => void): Promise<void> => {
+  const { tokens } = await oauth2Client.getToken(code);
+  send({
+    res,
+    status: HTTP_OK,
+    title: 'Authentication Successful',
+    body: '<h1>Authentication Successful!</h1><p>Please close this window and return to the terminal.</p>',
   });
+  console.log('\n=== Refresh Token ===');
+  console.log(tokens.refresh_token);
+  console.log('========================\n');
+  console.log('Please set this refresh token to the GOOGLE_REFRESH_TOKEN environment variable.');
+  close();
+};
 
-  // Start local server
-  const server = http.createServer(async (req, res) => {
-    try {
-      if (!req.url) {
-        throw new Error('No URL in request');
-      }
+const handleCallback = async (req: IncomingMessage, res: ServerResponse, close: () => void): Promise<void> => {
+  if (!req.url) {
+    throw new Error('No URL in request');
+  }
+  const code = parse(req.url, true).query.code;
+  if (typeof code !== 'string') {
+    send({ res, status: HTTP_BAD_REQUEST, title: 'Error', body: '<h1>Authentication code not found</h1>' });
+    return;
+  }
+  await exchangeCode(code, res, close);
+};
 
-      // Get code from callback URL
-      const queryParams = url.parse(req.url, true).query;
-      const code = queryParams.code;
+const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-      if (code) {
-        // Exchange code for tokens
-        const { tokens } = await oauth2Client.getToken(code as string);
-
-        // Return response
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Authentication Successful</title>
-          </head>
-          <body>
-            <h1>Authentication Successful!</h1>
-            <p>Please close this window and return to the terminal.</p>
-          </body>
-          </html>
-        `);
-
-        // Display refresh token
-        console.log('\n=== Refresh Token ===');
-        console.log(tokens.refresh_token);
-        console.log('========================\n');
-        console.log('Please set this refresh token to the GOOGLE_REFRESH_TOKEN environment variable.');
-
-        // Stop the server
-        server.destroy();
-      } else {
-        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Error</title>
-          </head>
-          <body>
-            <h1>Authentication code not found</h1>
-          </body>
-          </html>
-        `);
-      }
-    } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Error</title>
-        </head>
-        <body>
-          <h1>An error occurred</h1>
-          <p>${e}</p>
-        </body>
-        </html>
-      `);
-      console.error('Error:', e);
-    }
-  }).listen(3000, () => {
-    // Open authentication URL in browser
+const startServer = (): void => {
+  const server = createServer((req, res) => {
+    handleCallback(req, res, () => server.destroy()).catch((error: unknown) => {
+      send({
+        res,
+        status: HTTP_SERVER_ERROR,
+        title: 'Error',
+        body: `<h1>An error occurred</h1><p>${errorText(error)}</p>`,
+      });
+      console.error('Error:', error);
+    });
+  });
+  server.listen(PORT, () => {
     console.log('Opening authentication URL...');
-    open(authorizeUrl, { wait: false });
+    open(authorizeUrl, { wait: false }).catch((error: unknown) => {
+      console.error('Error:', error);
+    });
   });
-
   destroyer(server);
-}
+};
 
-main().catch(console.error);
+startServer();
