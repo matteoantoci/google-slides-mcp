@@ -1,102 +1,70 @@
 # Google Slides MCP Server
 
-This project provides a Model Context Protocol (MCP) server for interacting with the Google Slides API. It allows you to create, read, and modify Google Slides presentations programmatically.
+This process is an MCP server for the Google Slides API. A host talks to it on stdio. The first start opens a browser. You paste a Desktop client id and client secret. Google consent follows. Later starts read the token store.
 
 ## Prerequisites
 
-- Node.js (v20 or later recommended)
-- npm (usually comes with Node.js)
-- Google Cloud Project with the Google Slides API enabled.
-- OAuth 2.0 Credentials (Client ID and Client Secret) for your Google Cloud Project.
-- A Google Refresh Token associated with the OAuth 2.0 credentials and the necessary Google Slides API scopes.
+- Node.js 20 or later
+- A Google Cloud project with the Google Slides API enabled
+- An OAuth Desktop client id and client secret
+
+You do not need a refresh token. You do not need process env.
 
 ## Setup
 
-1.  **Clone the repository (if applicable) or ensure you are in the project directory.**
+1. Clone this repository.
+2. Run `npm install`.
+3. Run `npm run build`.
+4. Create a Desktop OAuth client in [Google Cloud Console](https://console.cloud.google.com/):
+   - Open [Google Auth platform](https://console.cloud.google.com/auth/branding).
+   - If the page says the platform is not configured, click **Get Started**.
+   - App name: `Google Slides MCP`. User support email: your address.
+   - Audience: **External**.
+   - Contact email: your address. Agree to the policy. Click **Create**.
+   - Open [Audience](https://console.cloud.google.com/auth/audience). Add your Gmail as a test user.
+   - Open [Data Access](https://console.cloud.google.com/auth/scopes). Add `https://www.googleapis.com/auth/presentations` and `https://www.googleapis.com/auth/drive.readonly`. Save.
+   - Open [Clients](https://console.cloud.google.com/auth/clients). Click **Create Client**. Application type: **Desktop app**. Name: `Google Slides MCP Desktop`. Click **Create**.
+   - Copy the client id and the client secret.
+5. Run `npm run start`. Paste the client id and the client secret. Finish Google consent. Then stop the process.
+6. Point the host at `node /path/to/google-slides-mcp/build/index.js`. Do not set env.
 
-2.  **Install dependencies:**
+Example host config:
 
-    ```bash
-    npm install
-    ```
+```json
+"google-slides-mcp": {
+  "transportType": "stdio",
+  "command": "node",
+  "args": [
+    "/path/to/google-slides-mcp/build/index.js"
+  ]
+}
+```
 
-3.  **Build the Server:**
-    Compile the TypeScript code to JavaScript:
+Replace the path with the compiled `build/index.js` on your machine.
 
-    ```bash
-    npm run build
-    ```
+## First start
 
-    This will create a `build` directory containing the compiled JavaScript code.
+The process opens a loopback page.
 
-4.  **Obtain Google API Credentials:**
-    - Go to the [Google Cloud Console](https://console.cloud.google.com/).
-    - Create a new project or select an existing one.
-    - Navigate to "APIs & Services" > "Enabled APIs & services".
-    - Click "+ ENABLE APIS AND SERVICES", search for "Google Slides API", and enable it.
-    - Navigate to "APIs & Services" > "Credentials".
-    - Click "+ CREATE CREDENTIALS" > "OAuth client ID".
-    - If prompted, configure the OAuth consent screen. For "User type", choose "External" unless you have a Google Workspace account and want to restrict it internally. Provide an app name, user support email, and developer contact information.
-    - On the "Scopes" page during consent screen setup, click "ADD OR REMOVE SCOPES". Search for and add the following scopes:
-      - `https://www.googleapis.com/auth/presentations` (To view and manage your presentations)
-      - _(Optional: Add `https://www.googleapis.com/auth/drive.readonly` or other Drive scopes if needed for specific operations like listing files, although not strictly required for basic Slides operations)_
-    - Save the consent screen configuration.
-    - Go back to "Credentials", click "+ CREATE CREDENTIALS" > "OAuth client ID".
-    - Select "Desktop app" as the Application type.
-    - Give it a name (e.g., "Slides MCP Client").
-    - Click "Create". You will see your **Client ID** and **Client Secret**. **Copy these down securely.** You can also download the JSON file containing these credentials.
+- If the store has no client id or client secret, paste those two values.
+- Continue to Google consent.
+- Close the success page.
 
-5.  **Obtain a Google Refresh Token:**
-    - A refresh token allows the server to obtain new access tokens without requiring user interaction each time. Generating one typically involves a one-time authorization flow.
-    - You can use the [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) for this:
-      - Go to the OAuth 2.0 Playground.
-      - Click the gear icon (Settings) in the top right.
-      - Check "Use your own OAuth credentials".
-      - Enter the **Client ID** and **Client Secret** you obtained in the previous step.
-      - In the "Step 1 - Select & authorize APIs" section on the left, find "Slides API v1" and select the `https://www.googleapis.com/auth/presentations` scope (and any other Drive scopes if you added them).
-      - Click "Authorize APIs".
-      - Sign in with the Google account you want the server to act on behalf of.
-      - Grant the requested permissions.
-      - You will be redirected back to the Playground. In "Step 2 - Exchange authorization code for tokens", you should see the **Refresh token** and Access token. **Copy the Refresh token securely.**
+The process writes the Google credential to the token store. It tries the OS keychain first. It uses `~/.config/google-slides-mcp/credential.json` if the keychain is not available. File mode is `0600`.
 
-    Alternatively, you can use the provided `get-token` script to obtain a refresh token. This script will build the project and then run a utility that guides you through the OAuth flow to get a refresh token. Ensure your `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are configured in your environment or a `.env` file if the script requires them (you may need to check the `src/getRefreshToken.ts` file for details on how it expects credentials). To run the script:
+Later starts use the store. No browser.
 
-    ```bash
-    npm run get-token
-    ```
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN` can override one field. They are never required. If env supplies a missing field, the process writes the merged credential to the store.
 
-6.  **Configure Credentials and Command in MCP Settings:**
-    Locate your MCP settings file (e.g., `.../User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`). Find or create the entry for `"google-slides-mcp"` and configure it with the command to run the server and your credentials:
-    ```json
-    "google-slides-mcp": {
-      "transportType": "stdio",
-      "command": "node",
-      "args": [
-        "/path/to/google-slides-mcp/build/index.js"
-      ],
-      "env": {
-        "GOOGLE_CLIENT_ID": "YOUR_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET": "YOUR_CLIENT_SECRET",
-        "GOOGLE_REFRESH_TOKEN": "YOUR_REFRESH_TOKEN"
-      }
-      // ... other optional settings like description ...
-    }
-    ```
-    Replace `/path/to/google-slides-mcp/build/index.js` with the actual path to the compiled server index file on your system. Replace `YOUR_CLIENT_ID`, `YOUR_CLIENT_SECRET`, and `YOUR_REFRESH_TOKEN` with the actual values you obtained. The MCP runner will inject these values into the server's environment when it starts.
-
-## Running the Server
-
-Execute the compiled code:
+## Run without a host
 
 ```bash
 npm run start
 ```
 
-The server will start and listen for MCP requests on standard input/output (stdio). You should see a message like: `Google Slides MCP server running and connected via stdio.`
+The process listens on stdio. Stderr prints `Google Slides MCP server running and connected via stdio.`
 
 ## Available Tools
-
-The server exposes the following tools via the Model Context Protocol:
 
 - **`create_presentation`**: Creates a new Google Slides presentation.
   - **Input:**
@@ -118,7 +86,7 @@ The server exposes the following tools via the Model Context Protocol:
 
 - **`get_page`**: Retrieves details about a specific page (slide) within a presentation.
   - **Input:**
-    - `presentationId` (string, required): The ID of the presentation containing the page.
+    - `presentationId` (string, required): The ID of the presentation to retrieve.
     - `pageObjectId` (string, required): The object ID of the page (slide) to retrieve.
   - **Output:** JSON object representing the page details.
 
@@ -135,5 +103,3 @@ The server exposes the following tools via the Model Context Protocol:
       - `slideId`: Object ID of the slide
       - `content`: All text extracted from the slide
       - `notes`: Speaker notes (if requested and available)
-
-_(More tools can be added by extending `src/index.ts`)_

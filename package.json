@@ -15,11 +15,11 @@
     "lint": "oxlint --type-aware",
     "typecheck": "tsc --noEmit",
     "check": "npm run fmt:check && npm run lint && npm run typecheck",
-    "get-token": "npm run build && node build/getRefreshToken.js",
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
+    "@napi-rs/keyring": "^1.3.0",
     "googleapis": "^174.0.1",
     "open": "^11.0.1",
     "zod": "^4.4.3"

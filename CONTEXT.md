@@ -33,9 +33,17 @@ The TypeScript SDK major line this repo depends on. This server uses the v2 pack
 _Avoid_: SDK version, MCP version
 
 **Google credential**:
-The Google Slides refresh token this process loads from the environment at start.
-_Avoid_: OAuth, MCP authorization, login
+The Cloud client id, client secret, and Slides refresh token this process uses to call the Slides API.
+_Avoid_: OAuth, MCP authorization, login, MCP access token, env
+
+**Token store**:
+The local place this process persists the Google credential. It tries the OS keychain first. It uses a user-config file if the keychain is not available. Process env can override one field. It is never required.
+_Avoid_: secret, session, cookie
 
 **MCP authorization**:
-Host sign-in to a remote MCP server over HTTP. This server does not use it.
+Host sign-in on HTTP. This server does not use it.
 _Avoid_: Google credential, Google OAuth, /mcp
+
+**MCP access token**:
+The bearer token a host would send on HTTP. This server does not use it.
+_Avoid_: refresh token, API key, session
