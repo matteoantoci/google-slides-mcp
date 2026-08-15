@@ -10,7 +10,22 @@ This process is an MCP server for the Google Slides API. A host talks to it on s
 
 You do not need a refresh token. You do not need process env.
 
-## Setup
+## Claude Code
+
+1. Create a Desktop OAuth client. Use the Google Auth platform steps below.
+2. In Claude Code run:
+
+```
+/plugin marketplace add matteoantoci/claude-plugins
+/plugin install google-slides-mcp@matteoantoci-plugins
+```
+
+3. Run `/reload-plugins` if Claude asks.
+4. The first start opens a browser. Paste the client id and the client secret. Finish Google consent.
+
+Later sessions read the token store. No host JSON. No env.
+
+## Other hosts
 
 1. Clone this repository.
 2. Run `npm install`.

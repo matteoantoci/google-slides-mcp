@@ -1,0 +1,14 @@
+{
+  "name": "google-slides-mcp",
+  "displayName": "Google Slides MCP",
+  "version": "0.1.0",
+  "description": "Create and edit Google Slides from Claude Code.",
+  "author": {
+    "name": "Matteo Antoci",
+    "url": "https://github.com/matteoantoci"
+  },
+  "homepage": "https://github.com/matteoantoci/google-slides-mcp",
+  "repository": "https://github.com/matteoantoci/google-slides-mcp",
+  "license": "ISC",
+  "keywords": ["google-slides", "mcp"]
+}
