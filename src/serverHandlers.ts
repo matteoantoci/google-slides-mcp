@@ -4,7 +4,7 @@ import { getPage } from './tools/getPage.js';
 import { getPresentation } from './tools/getPresentation.js';
 import { summarizePresentation } from './tools/summarizePresentation.js';
 import type { ToolModule } from './utils/toolExecutor.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import type { slides_v1 } from 'googleapis';
 
 const register = <T>(server: McpServer, slides: slides_v1.Slides, tool: ToolModule<T>): void => {
